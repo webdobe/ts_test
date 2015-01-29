@@ -1,0 +1,4 @@
+name = ThinkShout Test
+description = A module that adds values for a ThinkShout Test.
+package = Other
+core = 7.x

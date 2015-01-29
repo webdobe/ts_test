@@ -1,0 +1,125 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function ts_test_menu(){
+  $items = array();
+  // Doing a normal callback to render the drupal form.
+  // Instead of using drupal_get_form as callback.
+  $items['ts_test'] = array(
+    'title' => 'ThinkShout Test',
+    'page callback' => 'ts_test_callback',
+    'access callback' => TRUE,
+    'description' => 'ThinkShout test form.',
+  );
+  return $items;
+}
+
+/**
+ * Page callback for ts_test.
+ */
+function ts_test_callback(){
+  $output = '';
+
+  // Get the drupal form.
+  $form = drupal_get_form('ts_test_form');
+
+  // Some render fun.
+  $content = array(
+    '#type' => 'html_tag',
+    '#tag' => 'p',
+    '#attributes' => array(
+      'class' => 'bmi-content',
+    ),
+    '#value' => t('This is a simple BMI (Body Mass Index) calculator.  Please enter your weight (in lbs) and your height (in inches).  We will give your BMI'),
+  );
+
+  $output .= drupal_render($content);
+
+  $output .= drupal_render($form);
+  // Render and print drupal form.
+  return $output;
+}
+
+/**
+ * Form for ts_test.
+ */
+function ts_test_form($form, &$form_state) {
+  // Collect my weight value.
+  $form['my_weight'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Weight'),
+    '#size' => 4,
+    '#description' => t('Please enter your weight in lbs.'),
+    '#required' => TRUE,
+  );
+
+  // Collect my height value.
+  $form['my_height'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Height'),
+    '#size' => 4,
+    '#description' => t('Please enter your height in inches.'),
+    '#required' => TRUE,
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Get My BMI'),
+  );
+
+  return $form;
+}
+
+/**
+ * Validation handler for ts_test_form().
+ */
+function ts_test_form_validate($form, &$form_state) {
+  if (isset($form_state['values']['my_weight'])) {
+    $weight = $form_state['values']['my_weight'];
+    if (!is_numeric($weight)) {
+      form_error($form['my_weight'], t('You entered a non-numeric value for your weight.'));
+    }
+  }
+
+  if (isset($form_state['values']['my_height'])) {
+    $height = $form_state['values']['my_height'];
+    if (!is_numeric($height)) {
+      form_error($form['my_height'], t('You entered a non-numeric value for your height.'));
+    }
+  }
+}
+
+/**
+ * Submit handler for ts_test_form().
+ */
+function ts_test_form_submit($form, &$form_state) {
+  $weight = $form_state['values']['my_weight'];
+  $height = $form_state['values']['my_height'];
+
+  $height_sq = $height * $height;
+
+  $bmi = ($weight / $height_sq) * 703;
+
+  if ($bmi <= 18.5) {
+    $weight_class = 'Underweight';
+    $status = 'warning';
+  }
+  elseif ($bmi > 18.5 && $bmi < 25) {
+    $weight_class = 'Normal weight';
+    $status = 'status';
+  }
+  elseif ($bmi >= 25 && $bmi < 30) {
+    $weight_class = 'Overweight';
+    $status = 'warning';
+  }
+  elseif ($bmi >= 30) {
+    $weight_class = 'Obese';
+    $status = 'error';
+  }
+
+  $message = t('According to your BMI: %bmi, You are %weight_class', array('%bmi' => $bmi, '%weight_class' => $weight_class));
+
+  drupal_set_message($message, $status);
+}
